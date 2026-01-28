@@ -51,7 +51,8 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "d3": "^7.9.0"
+    "d3": "^7.9.0",
+    "gedcom-parser": "^1.0.2"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",

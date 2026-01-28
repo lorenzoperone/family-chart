@@ -13,6 +13,8 @@ export { default as cardSvg } from './core/cards/card-svg'
 export { default as cardHtml } from './core/cards/card-html'
 
 export { formatData, formatDataForExport } from "./store/format-data"
+export { parseGEDCOM } from "./store/ged-parser"
+export type { ParseGedcomOptions, ParseGedcomResult } from "./store/ged-parser"
 
 
 

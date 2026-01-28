@@ -199,3 +199,97 @@ The best way to start is to use the [visual builder](https://donatso.github.io/f
 For each relationship, both persons must have a record of it:
 - If John has spouse Jane, then Jane must have John's ID in her `rels.spouses` array
 - If Bob has parents Jane and John, then both parents must have Bob's ID in their `rels.children` array
+
+## Converting from GEDCOM Format
+
+You can import family tree data from GEDCOM files (`.ged`) using the `parseGEDCOM()` function. This is useful for migrating data from genealogy software like MyHeritage, Ancestry, or GenealogyJ.
+
+### Basic Usage
+
+```javascript
+import { parseGEDCOM } from 'family-chart'
+
+// Read GEDCOM file content as string
+const gedcomContent = /* ... read .ged file ... */
+
+// Parse GEDCOM file
+const result = parseGEDCOM(gedcomContent, {
+  maxAge: 110,           // Persons born within last N years are considered living
+  anonymizeLiving: true  // Anonymize living persons' data (default: true)
+})
+
+console.log(result.data)  // Family tree data in the correct format
+console.log(result.stats) // Parsing statistics
+```
+
+### Options
+
+The `parseGEDCOM()` function accepts an options object:
+
+- **`maxAge`** (number, default: `110`): Maximum age threshold in years to consider a person as living. Persons born within the last N years (without a recorded death date) are considered living.
+
+- **`anonymizeLiving`** (boolean, default: `true`): 
+  - If `true`: Living persons' personal details (birth dates, photos, notes, occupations, residences, education, sources) are removed and their name is replaced with "Living Person" to protect privacy
+  - If `false`: Living persons are completely removed from the tree
+
+### Handling Living Persons
+
+When you import a GEDCOM file, the parser automatically identifies living persons based on:
+1. **Death records**: If a person has a death date recorded, they are not considered living
+2. **Birth year threshold**: If a person has no death record and was born within the specified `maxAge` years, they are considered living
+
+For living persons:
+- Their sensitive information is removed or the record is deleted entirely
+- Gender information is always preserved to maintain tree structure
+- Family relationships are preserved to keep the tree connected
+
+### Example with Privacy Protection
+
+```javascript
+// Import GEDCOM and protect living persons' privacy
+const result = parseGEDCOM(gedcomContent, {
+  maxAge: 110,           // Consider persons born in last 110 years as living
+  anonymizeLiving: true  // Anonymize instead of removing entirely
+})
+
+// result.data will contain:
+// - Full data for deceased persons
+// - Anonymized data for living persons (name = "Living Person")
+// - All relationships preserved
+
+// result.stats will show:
+// {
+//   totalPersons: 250,
+//   livingPersons: 45,
+//   anonymized: 45,
+//   removed: 0,
+//   kept: 205
+// }
+```
+
+### Return Value
+
+The `parseGEDCOM()` function returns an object with:
+
+- **`data`**: Array of person objects in the family-chart format
+- **`stats`**: Statistics about the parsing:
+  - `totalPersons`: Total number of persons found
+  - `livingPersons`: Number of persons identified as living
+  - `anonymized`: Number of living persons anonymized
+  - `removed`: Number of living persons removed
+  - `kept`: Number of deceased persons kept unchanged
+
+### Supported GEDCOM Features
+
+The parser currently supports:
+- Individual records (INDI) with names and birth/death information
+- Family records (FAM) for establishing relationships
+- Gender information (SEX)
+- Multiple spouses
+- Parent-child relationships
+
+### Limitations
+
+- GEDCOM 5.5.1 format is supported
+- Complex GEDCOM structures (multiple parents, same-sex couples) are handled appropriately
+- Photo and media references are stripped during anonymization
